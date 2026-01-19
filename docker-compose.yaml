@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  # Service 1: Backend Python (FastAPI)
+  app:
+    container_name: film-backend-python
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT}:${PORT}" # Map port 8000 komputer ke 8000 container
+    volumes:
+      - .:/app # Hot-reload: Coding di luar, update di dalam otomatis
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - db_postgres
+    restart: unless-stopped
+
+  # Service 2: Database (PostgreSQL)
+  db_postgres:
+    image: postgres:15-alpine
+    container_name: film-db-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+# Volume untuk menyimpan data DB agar tidak hilang saat container mati
+volumes:
+  postgres_data:
